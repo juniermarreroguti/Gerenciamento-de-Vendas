@@ -1,0 +1,260 @@
+---
+title: "**LabPAD**: EMPRESAS"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+    vertical_layout: fill
+    social: menu
+runtime: shiny    
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(plotly)
+library(highcharter)
+library(ggplot2)
+library(shiny)
+library('billboarder')
+
+# https://byollin.github.io/RInteractiveCharts/#14
+# https://rstudio-pubs-static.s3.amazonaws.com/320413_6ab300527e8548b1a3cbd0d4c6200fcc.html
+# byollin.shinyapps.io/VisionZero 
+# https://luz.vc/collections/pacotes-de-planilhas/products/pacote-de-planilhas-de-estrategia
+
+data("USArrests")
+
+datos <- data.frame(Localization =rownames(USArrests), USArrests)
+rownames(datos) <-NULL
+names(datos) <- c("Estado","Produto I","Produto II","Produto III","Produto IV")
+
+
+```
+
+
+Input {.sidebar}
+===============================================================
+
+
+### PRODUCTOS
+
+
+```{r Variavies}
+
+
+selectInput('ESTADOS', 'ESTADOS', datos[,1])
+
+selectInput('PRODUTOS', 'PRODUTOS', c(names(datos)[2:5]))
+
+
+
+```
+
+
+
+# RENDIMENTOS
+
+
+
+## Column{}
+
+### **VENDAS POR ESTADO**
+
+
+```{r}
+
+a <- c(rep("Norte",10),rep("Sul",10), rep("Este",10), rep("Oeste",10), rep("Centro",10))
+b <- c(rep("red",10),rep("blue",10), rep("green",10), rep("brown",10), rep("black",10))
+
+new.data <- data.frame(datos, Região = a, Color =b)
+
+t <- gather(data = new.data,
+            key = "Productos",
+            value=  "Vendas",
+            2:5)
+
+y  <- reactive({ 
+  subset(t, t$Estado == input$ESTADOS)
+})  
+
+
+#color <- y()$Color
+
+lenged_title <- "Região"
+
+renderPlot({
+
+ggplot(y(), aes(x=y()$Productos, y = y()$Vendas,  fill = y()$Color)) + 
+  geom_col() +
+scale_fill_manual(values = as.character(y()$Color[1]), 
+                  name = lenged_title, labels =as.character(y()[1,2])) +
+scale_y_continuous(name = "Vendas", breaks = c(50,150, 300), limits = c(0, 300)) +
+   coord_flip() +
+   labs(x="",
+        title = y()[1,1],
+        y="Vendas") + 
+   theme(legend.title = element_blank())+
+   theme_test()
+  
+  
+})
+
+```
+
+
+
+### **FREQUÊNCIA DE VENDAS DO PRODUTO**
+
+
+```{r}
+
+t$Productos <- gsub("o.I", "o I", t$Productos)
+
+z <- reactive({
+  subset(t, t$Productos == input$PRODUTOS)
+})
+
+
+renderPlot({
+  
+ggplot(z(), aes(z()$Vendas)) + 
+  geom_density() + 
+  ylab("Density") +
+  labs(title = z()[1,4],
+       x= "") +
+  geom_rug(color = z()$Color, size=0.8) +
+  theme_test()  
+
+})
+
+
+
+```
+
+
+
+
+# CONTROLE DE VENDAS
+
+
+## Column{}
+
+
+### Vendas de Casa
+
+```{r}
+
+produto.i = round(sum(datos$`Produto I`), digits = 0)
+
+valueBox(value = paste0("R$ " ,produto.i), icon = "fa-home", caption = "PRODUTO I", color = "#009999")
+  
+```
+
+
+### Vendas de pneus
+
+```{r}
+
+produto.ii = round(sum(datos$`Produto II`), digits = 0)
+
+
+valueBox(value = paste0("R$ " ,produto.ii), icon = "fa-stroopwafel", caption = "PRODUTO II", color = "#008899")
+  
+```
+
+
+### Total de carros
+
+```{r}
+produto.iii = round(sum(datos$`Produto III`),digits = 0)
+
+
+valueBox(value = paste0("R$ " ,produto.iii), icon = "fa-car", caption = "PRODUTO III", color = "#007799")
+  
+```
+
+
+
+### Total de equipamento
+
+```{r}
+
+produto.iv = round(sum(datos$`Produto IV`),digits = 0)
+
+valueBox(value = paste0("R$ " ,produto.iv), 
+         icon = "fa-clipboard-list", caption = "PRODUTO IV", color = "#006699")
+  
+```
+
+
+
+
+## Column{}
+
+
+### **Distribuição de vendas nos Estados**
+
+```{r}
+
+f <- gather(data = datos,
+            key = "Productos",
+            value=  "Vendas",
+            2:5)
+
+
+hchart(f, "column", hcaes(x = Estado, y = Vendas, group = Productos)) %>%
+  hc_chart(zoomType = "x", borderWidth = 2, borderColor = "#F0FFFF") %>%
+  #hc_tooltip(table = TRUE, split = T, crosshairs = T, backgroundColor = "#F0FFFF") %>%
+  hc_legend(verticalAlign = "top") %>%
+  hc_colors(c("Red","Green","Orange","Blue")) %>%
+  hc_add_theme(hc_theme_google())
+
+
+
+```
+
+
+
+### **Rendimiento**
+
+```{r}
+
+S = produto.i + produto.ii + produto.iii + produto.iv
+S = data.frame(Vendas = S, Investimento= 8567)
+
+q <- gather(data = S,
+            key = "Productos",
+            value=  "Vendas",
+            1:2)
+
+billboarder() %>% bb_donutchart(q) %>% bb_legend(position = "top")
+ 
+```
+
+
+
+# PROJEÇÃO
+
+
+### **Projeção** - (PCA)
+
+```{r}
+
+g <- datos
+rownames(g) <- g[,1]
+g <- g[,-1]
+
+hchart(princomp(g, cor = TRUE))%>%
+  hc_chart(zoomType = "x", borderWidth = 2, borderColor = "#F0FFFF") %>%
+  hc_colors(c("Gray","Red","Green","Orange","Blue")) %>%
+  hc_legend(verticalAlign = "top",     align = "center") %>%
+  hc_add_theme(hc_theme_google()) %>%
+  hc_yAxis(plotLines = list(list(color = "black", width = 3, value = 0))) %>%
+  hc_xAxis(plotLines = list(list(color = "black", width = 3, value = 0))) %>%
+  hc_plotOptions(column = list(dataLabels = list(enabled = FALSE),
+                  enableMouseTracking = FALSE))
+
+
+```
+
+    
