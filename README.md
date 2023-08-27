@@ -3,6 +3,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
+<p align="justify">
+
 &nbsp;&nbsp;&nbsp;
 O  [**Gerenciamentos de Vendas**](https://junier-marrero-guti.shinyapps.io/GerenciamentoVendas/) é um dashboard que analisa as vendas de quatro produtos de uma empresa fictícia nos 50 estados dos Estados Unidos mediante consulta no banco de dados.
 
@@ -39,5 +41,7 @@ Com este dashaboard conseguimos apresentar informações de forma visual e conci
 
 &nbsp;&nbsp;&nbsp;
 **APP**
+
 &nbsp;&nbsp;&nbsp;
 O aplicativo encontra-se disponível no seguinte endereço: [**Gerenciamentos de Vendas**](https://junier-marrero-guti.shinyapps.io/GerenciamentoVendas/). Ficaria muito grato caso tenha interesse em reproduzir essas e outras análises em sua empresa
+ </p>
